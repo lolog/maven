@@ -1,0 +1,130 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>adj.felix.pkg</groupId>
+	<artifactId>pkg</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+
+	<name>pkg</name>
+	<url>http://maven.apache.org</url>
+	
+	<!-- 依赖的maven仓库 -->
+	<repositories>
+		<repository>
+			<id>nexus</id>
+			<url>http://localhost:8081/nexus/content/repositories/thirdparty/</url>
+		</repository>
+		<repository>
+			<id>ali-maven</id>
+			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+		</repository>
+	</repositories>
+	
+	<properties>
+		<spring.version>4.3.6.RELEASE</spring.version>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		
+		<!-- 
+			设置编译的jdk版本。 
+			等价于插件：maven-compiler-plugin 
+		-->
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/resource</directory>
+			</resource>
+		</resources>
+
+		<plugins>
+			<!-- 用于指定本项目生成的jar包中的MANIFEST.MF文件中的配置, 如Class-Path和Main-Class -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<!-- 指定添加项目中使用的外部jar的classpath项 -->
+							<addClasspath>true</addClasspath>
+							<!-- 指定外部jar所在的路径 -->
+							<classpathPrefix>lib/</classpathPrefix>
+							<!-- 指定本项目jar包的Main-Class -->
+							<mainClass>adj.felix.pkg.App</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
+			<!-- 处理与依赖相关的插件 很多可用的goal, 如：copy, copy-dependencies -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<!-- 依赖包输出目录 -->
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<!-- 不输出 -->
+							<excludeArtifactIds>junit</excludeArtifactIds>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 指定项目源码以及 编译jdk版本 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<!-- 字符集编码 -->
+					<encoding>UTF-8</encoding>
+					<!-- 跳过测试 -->
+					<skipTests>true</skipTests>
+					<!-- 编译器使用的初始内存 -->
+					<meminitial>128m</meminitial>
+					<!-- 编译器使用的最大内存 -->
+					<maxmem>512m</maxmem>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

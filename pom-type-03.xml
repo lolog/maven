@@ -1,0 +1,180 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>adj.felix.pkg</groupId>
+	<artifactId>pkg</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+
+	<name>pkg</name>
+	<url>http://maven.apache.org</url>
+
+	<!-- 依赖的maven仓库 -->
+	<repositories>
+		<repository>
+			<id>nexus</id>
+			<url>http://localhost:8081/nexus/content/repositories/thirdparty/</url>
+		</repository>
+		<repository>
+			<id>ali-maven</id>
+			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+		</repository>
+	</repositories>
+
+	<properties>
+		<spring.version>4.3.6.RELEASE</spring.version>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<!-- 
+			设置编译的jdk版本。 
+			等价于插件：maven-compiler-plugin 
+		-->
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/resource</directory>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.4.1</version>
+				<executions>
+					<execution>
+						<!-- maven-shade-plugin 只存在一个goal为shade, 需要将其绑定到 phase为package上 -->
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<!-- 打成可执行的jar包 的主方法入口 -->
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>adj.felix.pkg.App</mainClass>
+								</transformer>
+								<!-- 
+									将spring framework依赖打到一个jar包中，运行时会出现读取XML schema文件出错。
+									原因是spring framework的多个jar包中包含相同的文件spring.handlers和spring.schemas,如果生成一个jar包会互相覆盖。
+									为了避免互相影响，可以使用AppendingTransformer来对文件内容追加合并。
+								-->
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/spring.handlers</resource>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/spring.schemas</resource>
+								</transformer>
+							</transformers>
+
+							<!-- 
+								对jar包进行过滤 。
+								注意：不针对于scope为test的jar包
+							-->
+							<artifactSet>
+								<!-- 排除jar包 -->
+								<excludes>
+									<!-- 所有排除jar包的范围 -->
+									<exclude>org.springframework:spring-tx:*</exclude>
+								</excludes>
+								<!-- 所有包含的jar包  -->
+								<includes>
+									<include>junit:junit:*</include>
+									<include>org.springframework:spring-core:*</include>
+									<include>org.springframework:spring-context:*</include>
+								</includes>
+							</artifactSet>
+
+							<!-- 
+								jar包内部文件的过滤,解决包重复引起的打包错误。
+								注意：不针对于scope为test的jar包
+							-->
+							<filters>
+								<filter>
+									<!-- 针对于junit jar包 -->
+									<artifact>junit:junit</artifact>
+									<!-- 包含的资源 -->
+									<includes>
+										<include>junit/framework/**</include>
+										<include>org/junit/**</include>
+									</includes>
+									<!-- 过滤掉的资源 -->
+									<excludes>
+										<exclude>org/junit/experimental/**</exclude>
+										<exclude>org/junit/runners/**</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<!-- 针所有jar包 -->
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<!-- 配置original和 shaded的输出目录-->
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 指定项目源码以及 编译jdk版本 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<!-- 字符集编码 -->
+					<encoding>UTF-8</encoding>
+					<!-- 跳过测试 -->
+					<skipTests>true</skipTests>
+					<!-- 编译器使用的初始内存 -->
+					<meminitial>128m</meminitial>
+					<!-- 编译器使用的最大内存 -->
+					<maxmem>512m</maxmem>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
