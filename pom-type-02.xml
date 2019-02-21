@@ -66,6 +66,9 @@
 			</resource>
 		</resources>
 
+		<!-- 指定打包的文件名-->
+		<finalName>${project.artifactId}</finalName>
+
 		<plugins>
 			<!-- 用于指定本项目生成的jar包中的MANIFEST.MF文件中的配置, 如Class-Path和Main-Class -->
 			<plugin>
@@ -90,6 +93,18 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.5.5</version>
+
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>adj.felix.pkg.App</mainClass>
+						</manifest>
+					</archive>
+					<descriptors>
+						<descriptor>src/main/assembly/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+
 				<executions>
 					<!-- 配置执行器 -->
 					<execution>
@@ -100,11 +115,6 @@
 							<!--  用descriptor打包 -->
 							<goal>single</goal>
 						</goals>
-						<configuration>
-							<finalName>${project.name}</finalName>
-							<!--配置描述文件路径 -->
-							<descriptor>src/main/assembly/assembly.xml</descriptor>
-						</configuration>
 					</execution>
 				</executions>
 
