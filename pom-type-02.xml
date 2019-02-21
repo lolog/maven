@@ -97,7 +97,7 @@
 						<!-- 绑定到package生命周期阶段上 -->
 						<phase>package</phase>
 						<goals>
-							<!-- 只运行一次 -->
+							<!--  用descriptor打包 -->
 							<goal>single</goal>
 						</goals>
 						<configuration>
